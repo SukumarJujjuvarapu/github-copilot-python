@@ -2,6 +2,45 @@
 const SIZE = 9;
 let puzzle = [];
 
+function getCurrentBoard() {
+  const inputs = document.getElementById('sudoku-board').getElementsByTagName('input');
+  const board = [];
+  for (let i = 0; i < SIZE; i++) {
+    board[i] = [];
+    for (let j = 0; j < SIZE; j++) {
+      const value = inputs[i * SIZE + j].value;
+      board[i][j] = value ? parseInt(value, 10) : 0;
+    }
+  }
+  return board;
+}
+
+function hasConflict(board, row, col) {
+  const value = board[row][col];
+  if (!value) return false;
+
+  for (let i = 0; i < SIZE; i++) {
+    if (i !== col && board[row][i] === value) return true;
+    if (i !== row && board[i][col] === value) return true;
+  }
+
+  const boxRowStart = Math.floor(row / 3) * 3;
+  const boxColStart = Math.floor(col / 3) * 3;
+  for (let i = boxRowStart; i < boxRowStart + 3; i++) {
+    for (let j = boxColStart; j < boxColStart + 3; j++) {
+      if ((i !== row || j !== col) && board[i][j] === value) return true;
+    }
+  }
+  return false;
+}
+
+function validateInput(input) {
+  const row = parseInt(input.dataset.row, 10);
+  const col = parseInt(input.dataset.col, 10);
+  const board = getCurrentBoard();
+  input.classList.toggle('incorrect', hasConflict(board, row, col));
+}
+
 function createBoardElement() {
   const boardDiv = document.getElementById('sudoku-board');
   boardDiv.innerHTML = '';
@@ -18,6 +57,7 @@ function createBoardElement() {
       input.addEventListener('input', (e) => {
         const val = e.target.value.replace(/[^1-9]/g, '');
         e.target.value = val;
+        validateInput(e.target);
       });
       rowDiv.appendChild(input);
     }
