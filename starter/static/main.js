@@ -1,6 +1,7 @@
 // Client-side rendering and interaction for the Flask-backed Sudoku
 const SIZE = 9;
 const LEADERBOARD_STORAGE_KEY = 'sudokuLeaderboard';
+const DARK_MODE_STORAGE_KEY = 'sudokuDarkMode';
 const MAX_LEADERBOARD_ENTRIES = 10;
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
 let puzzle = [];
@@ -10,6 +11,35 @@ let timerInterval = null;
 let timerStartedAt = 0;
 let elapsedMilliseconds = 0;
 let gameCompleted = false;
+
+function applyDarkMode(enabled) {
+  document.body.classList.toggle('dark-mode', enabled);
+  const toggle = document.getElementById('dark-mode-toggle');
+  toggle.setAttribute('aria-pressed', String(enabled));
+  toggle.innerText = enabled ? 'Light mode' : 'Dark mode';
+}
+
+function loadDarkModePreference() {
+  try {
+    return localStorage.getItem(DARK_MODE_STORAGE_KEY) === 'true';
+  } catch (error) {
+    return false;
+  }
+}
+
+function saveDarkModePreference(enabled) {
+  try {
+    localStorage.setItem(DARK_MODE_STORAGE_KEY, String(enabled));
+  } catch (error) {
+    // Storage may be unavailable; the current theme should still apply.
+  }
+}
+
+function toggleDarkMode() {
+  const enabled = !document.body.classList.contains('dark-mode');
+  applyDarkMode(enabled);
+  saveDarkModePreference(enabled);
+}
 
 function formatElapsedTime(milliseconds) {
   const totalSeconds = Math.floor(milliseconds / 1000);
@@ -157,7 +187,7 @@ function completeGame() {
   }
   stopTimer();
   const message = document.getElementById('message');
-  message.style.color = '#388e3c';
+  message.style.color = 'var(--message-success)';
   message.innerText = 'Congratulations! You solved it!';
   recordCompletion();
 }
@@ -352,7 +382,7 @@ async function checkSolution() {
   const data = await res.json();
   const msg = document.getElementById('message');
   if (data.error) {
-    msg.style.color = '#d32f2f';
+    msg.style.color = 'var(--message-error)';
     msg.innerText = data.error;
     return;
   }
@@ -368,13 +398,15 @@ async function checkSolution() {
   if (incorrect.size === 0) {
     completeGame();
   } else {
-    msg.style.color = '#d32f2f';
+    msg.style.color = 'var(--message-error)';
     msg.innerText = 'Some cells are incorrect.';
   }
 }
 
 // Wire buttons
 window.addEventListener('load', () => {
+  applyDarkMode(loadDarkModePreference());
+  document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
   document.getElementById('difficulty').addEventListener('change', newGame);
   document.getElementById('new-game').addEventListener('click', newGame);
   document.getElementById('hint').addEventListener('click', useHint);
