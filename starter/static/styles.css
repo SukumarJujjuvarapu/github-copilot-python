@@ -59,12 +59,28 @@ h1 {
 }
 
 .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
     margin: 20px auto;
+    padding: 0 12px;
+}
+
+.controls label,
+.controls select {
+    font-size: 16px;
+}
+
+.controls select {
+    min-height: 36px;
+    padding: 4px 8px;
 }
 
 button {
     padding: 8px 18px;
-    margin: 0 8px;
+    min-height: 36px;
     font-size: 16px;
     border: none;
     background: #1976d2;
@@ -79,7 +95,31 @@ button:hover {
 }
 
 #message {
-    margin-left: 20px;
+    flex-basis: 100%;
     font-size: 16px;
     color: #d32f2f;
+}
+
+@media (max-width: 420px) {
+    #sudoku-board {
+        max-width: calc(100vw - 16px);
+        overflow: auto;
+        margin-top: 20px;
+    }
+
+    .sudoku-cell {
+        width: 10vw;
+        height: 10vw;
+        max-width: 40px;
+        max-height: 40px;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+
+    .controls button,
+    .controls select {
+        width: min(100%, 240px);
+    }
 }
