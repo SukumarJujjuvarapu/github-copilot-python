@@ -1,13 +1,14 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sudoku Game</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <h1>Sudoku Game</h1>
-  <div id="sudoku-board"></div>
+  <div id="sudoku-board" role="grid" aria-label="Sudoku board"></div>
   <div class="controls">
     <label for="difficulty">Difficulty:</label>
     <select id="difficulty">
@@ -23,7 +24,7 @@
     </button>
     <span id="hint-count">Hints used: 0</span>
     <span id="timer">Time: 00:00</span>
-    <span id="message"></span>
+    <span id="message" role="status" aria-live="polite" aria-atomic="true"></span>
   </div>
   <section id="leaderboard" aria-labelledby="leaderboard-title">
     <h2 id="leaderboard-title">Top 10</h2>

@@ -289,6 +289,9 @@ function createBoardElement() {
       const input = document.createElement('input');
       input.type = 'text';
       input.maxLength = 1;
+      input.inputMode = 'numeric';
+      input.pattern = '[1-9]';
+      input.setAttribute('aria-label', `Row ${i + 1}, column ${j + 1}`);
       input.className = 'sudoku-cell';
       input.dataset.row = i;
       input.dataset.col = j;
