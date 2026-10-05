@@ -1,11 +1,15 @@
 // Client-side rendering and interaction for the Flask-backed Sudoku
 const SIZE = 9;
+const LEADERBOARD_STORAGE_KEY = 'sudokuLeaderboard';
+const MAX_LEADERBOARD_ENTRIES = 10;
+const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
 let puzzle = [];
 let solution = [];
 let hintsUsed = 0;
 let timerInterval = null;
 let timerStartedAt = 0;
 let elapsedMilliseconds = 0;
+let gameCompleted = false;
 
 function formatElapsedTime(milliseconds) {
   const totalSeconds = Math.floor(milliseconds / 1000);
@@ -48,6 +52,114 @@ function stopTimer() {
     timerInterval = null;
   }
   timerStartedAt = 0;
+}
+
+function loadLeaderboard() {
+  try {
+    const stored = localStorage.getItem(LEADERBOARD_STORAGE_KEY);
+    if (!stored) return [];
+
+    const entries = JSON.parse(stored);
+    if (!Array.isArray(entries)) return [];
+
+    return entries
+      .filter(entry =>
+        entry &&
+        typeof entry.name === 'string' &&
+        entry.name.trim() &&
+        Number.isFinite(entry.timeMilliseconds) &&
+        entry.timeMilliseconds >= 0 &&
+        DIFFICULTIES.includes(entry.difficulty) &&
+        Number.isInteger(entry.hintsUsed) &&
+        entry.hintsUsed >= 0
+      )
+      .sort((a, b) => a.timeMilliseconds - b.timeMilliseconds)
+      .slice(0, MAX_LEADERBOARD_ENTRIES);
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveLeaderboard(entries) {
+  try {
+    localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify(entries));
+  } catch (error) {
+    // Storage may be unavailable or full; gameplay should continue normally.
+  }
+}
+
+function renderLeaderboard() {
+  const container = document.getElementById('leaderboard-content');
+  if (!container) return;
+
+  const entries = loadLeaderboard();
+  container.innerHTML = '';
+  if (entries.length === 0) {
+    const emptyMessage = document.createElement('p');
+    emptyMessage.className = 'leaderboard-empty';
+    emptyMessage.innerText = 'No completed games yet.';
+    container.appendChild(emptyMessage);
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.className = 'leaderboard-table';
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th scope="col">Rank</th>
+        <th scope="col">Player</th>
+        <th scope="col">Time</th>
+        <th scope="col">Difficulty</th>
+        <th scope="col">Hints</th>
+      </tr>
+    </thead>
+  `;
+  const body = document.createElement('tbody');
+  entries.forEach((entry, index) => {
+    const row = document.createElement('tr');
+    [index + 1, entry.name, formatElapsedTime(entry.timeMilliseconds),
+      entry.difficulty, entry.hintsUsed].forEach(value => {
+      const cell = document.createElement('td');
+      cell.innerText = value;
+      row.appendChild(cell);
+    });
+    body.appendChild(row);
+  });
+  table.appendChild(body);
+  container.appendChild(table);
+}
+
+function recordCompletion() {
+  const name = window.prompt('Enter your name for the leaderboard:');
+  if (!name || !name.trim()) return;
+
+  const entries = loadLeaderboard();
+  entries.push({
+    name: name.trim(),
+    timeMilliseconds: elapsedMilliseconds,
+    difficulty: document.getElementById('difficulty').value,
+    hintsUsed
+  });
+  entries.sort((a, b) => a.timeMilliseconds - b.timeMilliseconds);
+  const topEntries = entries.slice(0, MAX_LEADERBOARD_ENTRIES);
+  saveLeaderboard(topEntries);
+  renderLeaderboard();
+}
+
+function completeGame() {
+  if (gameCompleted) return;
+
+  gameCompleted = true;
+  const inputs = document.getElementById('sudoku-board').getElementsByTagName('input');
+  for (const input of inputs) {
+    input.disabled = true;
+  }
+  stopTimer();
+  const message = document.getElementById('message');
+  message.style.color = '#388e3c';
+  message.innerText = 'Congratulations! You solved it!';
+  recordCompletion();
 }
 
 function getCurrentBoard() {
@@ -99,14 +211,7 @@ function checkForCompletion() {
     }
   }
 
-  const inputs = document.getElementById('sudoku-board').getElementsByTagName('input');
-  for (const input of inputs) {
-    input.disabled = true;
-  }
-  stopTimer();
-  const message = document.getElementById('message');
-  message.style.color = '#388e3c';
-  message.innerText = 'Congratulations! You solved it!';
+  completeGame();
 }
 
 function isSafe(board, row, col, value) {
@@ -195,6 +300,7 @@ async function newGame() {
   resetTimer();
   solution = [];
   hintsUsed = 0;
+  gameCompleted = false;
   updateHintCount();
   const difficulty = document.getElementById('difficulty').value;
   const res = await fetch(`/new?difficulty=${encodeURIComponent(difficulty)}`);
@@ -260,9 +366,7 @@ async function checkSolution() {
     }
   }
   if (incorrect.size === 0) {
-    stopTimer();
-    msg.style.color = '#388e3c';
-    msg.innerText = 'Congratulations! You solved it!';
+    completeGame();
   } else {
     msg.style.color = '#d32f2f';
     msg.innerText = 'Some cells are incorrect.';
@@ -275,6 +379,7 @@ window.addEventListener('load', () => {
   document.getElementById('new-game').addEventListener('click', newGame);
   document.getElementById('hint').addEventListener('click', useHint);
   document.getElementById('check-solution').addEventListener('click', checkSolution);
+  renderLeaderboard();
   // initialize
   newGame();
 });
