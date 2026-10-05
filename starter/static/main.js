@@ -43,6 +43,25 @@ function validateInput(input) {
   input.classList.toggle('incorrect', hasConflict(board, row, col));
 }
 
+function checkForCompletion() {
+  if (!solution.length) return;
+
+  const board = getCurrentBoard();
+  for (let row = 0; row < SIZE; row++) {
+    for (let col = 0; col < SIZE; col++) {
+      if (!board[row][col] || board[row][col] !== solution[row][col]) return;
+    }
+  }
+
+  const inputs = document.getElementById('sudoku-board').getElementsByTagName('input');
+  for (const input of inputs) {
+    input.disabled = true;
+  }
+  const message = document.getElementById('message');
+  message.style.color = '#388e3c';
+  message.innerText = 'Congratulations! You solved it!';
+}
+
 function isSafe(board, row, col, value) {
   for (let i = 0; i < SIZE; i++) {
     if (board[row][i] === value || board[i][col] === value) return false;
@@ -95,6 +114,7 @@ function createBoardElement() {
         const val = e.target.value.replace(/[^1-9]/g, '');
         e.target.value = val;
         validateInput(e.target);
+        checkForCompletion();
       });
       rowDiv.appendChild(input);
     }
@@ -152,6 +172,7 @@ function useHint() {
     input.className = 'sudoku-cell hinted';
     hintsUsed++;
     updateHintCount();
+    checkForCompletion();
     return;
   }
 }
