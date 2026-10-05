@@ -1,6 +1,8 @@
 // Client-side rendering and interaction for the Flask-backed Sudoku
 const SIZE = 9;
 let puzzle = [];
+let solution = [];
+let hintsUsed = 0;
 
 function getCurrentBoard() {
   const inputs = document.getElementById('sudoku-board').getElementsByTagName('input');
@@ -39,6 +41,41 @@ function validateInput(input) {
   const col = parseInt(input.dataset.col, 10);
   const board = getCurrentBoard();
   input.classList.toggle('incorrect', hasConflict(board, row, col));
+}
+
+function isSafe(board, row, col, value) {
+  for (let i = 0; i < SIZE; i++) {
+    if (board[row][i] === value || board[i][col] === value) return false;
+  }
+
+  const boxRowStart = Math.floor(row / 3) * 3;
+  const boxColStart = Math.floor(col / 3) * 3;
+  for (let i = boxRowStart; i < boxRowStart + 3; i++) {
+    for (let j = boxColStart; j < boxColStart + 3; j++) {
+      if (board[i][j] === value) return false;
+    }
+  }
+  return true;
+}
+
+function solveBoard(board) {
+  for (let row = 0; row < SIZE; row++) {
+    for (let col = 0; col < SIZE; col++) {
+      if (board[row][col] !== 0) continue;
+      for (let value = 1; value <= SIZE; value++) {
+        if (!isSafe(board, row, col, value)) continue;
+        board[row][col] = value;
+        if (solveBoard(board)) return true;
+        board[row][col] = 0;
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
+function updateHintCount() {
+  document.getElementById('hint-count').innerText = `Hints used: ${hintsUsed}`;
 }
 
 function createBoardElement() {
@@ -88,11 +125,35 @@ function renderPuzzle(puz) {
 }
 
 async function newGame() {
+  solution = [];
+  hintsUsed = 0;
+  updateHintCount();
   const difficulty = document.getElementById('difficulty').value;
   const res = await fetch(`/new?difficulty=${encodeURIComponent(difficulty)}`);
   const data = await res.json();
   renderPuzzle(data.puzzle);
+  solution = data.puzzle.map(row => row.slice());
+  solveBoard(solution);
   document.getElementById('message').innerText = '';
+}
+
+function useHint() {
+  if (!solution.length) return;
+
+  const inputs = document.getElementById('sudoku-board').getElementsByTagName('input');
+  for (let idx = 0; idx < inputs.length; idx++) {
+    const input = inputs[idx];
+    if (input.disabled || input.value) continue;
+
+    const row = parseInt(input.dataset.row, 10);
+    const col = parseInt(input.dataset.col, 10);
+    input.value = solution[row][col];
+    input.disabled = true;
+    input.className = 'sudoku-cell hinted';
+    hintsUsed++;
+    updateHintCount();
+    return;
+  }
 }
 
 async function checkSolution() {
@@ -141,6 +202,7 @@ async function checkSolution() {
 window.addEventListener('load', () => {
   document.getElementById('difficulty').addEventListener('change', newGame);
   document.getElementById('new-game').addEventListener('click', newGame);
+  document.getElementById('hint').addEventListener('click', useHint);
   document.getElementById('check-solution').addEventListener('click', checkSolution);
   // initialize
   newGame();
