@@ -1,60 +1,117 @@
-# Refactor a Sudoku Game written in Python Flask
+# Sudoku Game
 
-Use this simple Sudoku game as a starting point to practice your skills with GitHub Copilot. The goal is to refactor the code to use modern technologies, while also adding new features and improving the overall user experience.
+An interactive Sudoku game built with Python and Flask. The application
+generates solvable puzzles, provides helpful gameplay feedback, and stores
+personal preferences and scores locally in the browser.
 
-## Getting Started
+## Features
 
-Follow these instructions to get a copy of the project up and running on your local machine.
+- **Three difficulty levels:** Easy (45 clues), Medium (35 clues), and Hard
+  (25 clues).
+- **Guaranteed unique solutions:** Every generated puzzle is checked to ensure
+  it has exactly one solution.
+- **Immediate validation:** Invalid moves are highlighted as soon as they are
+  entered.
+- **Hints:** Reveal a correct value and track the number of hints used.
+- **Completion detection:** Correctly completed boards are detected
+  automatically, with a completion message and score prompt.
+- **Timer:** Track the elapsed solving time for each puzzle.
+- **Top 10 leaderboard:** Completed scores include the player name, time,
+  difficulty, and hints used. Scores are saved in browser `localStorage`.
+- **Persistent dark mode:** The selected color theme is saved in browser
+  `localStorage` and restored on the next visit.
+- **Board styling:** Alternating 3x3 box backgrounds and stronger box borders
+  make Sudoku regions easy to distinguish.
+- **Responsive and accessible UI:** The layout works on desktop and mobile
+  screens and includes keyboard focus styles, ARIA labels, and live status
+  announcements.
 
-### Dependencies
+## Installation and Setup
 
-```
-- Modern web browser (Chrome, Firefox, Edge, etc.)
+### Prerequisites
+
 - Python 3
+- A modern web browser
+
+### Windows
+
+Open PowerShell in the repository directory and run:
+
+```powershell
+cd starter
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 ```
 
-### Installation
+If PowerShell prevents script activation, use the virtual environment's
+interpreter directly instead:
 
-1. Fork this repository to your GitHub account. (You can use the "Fork" button on the top right corner of the repository page.)
-
-2. Clone your forked repository to your local machine.
-
-3. Open a terminal window and navigate to the "github-copilot-python/starter" directory.
-
-4. Create a Python virtual environment and activate it (optional but highly recommended).
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-5. Install required Python packages.
+## Run the Flask App
 
-```bash
-pip install -r requirements.txt
-```
+From the `starter` directory:
 
-6. Run the Flask app.
-
-```bash
+```powershell
 python app.py
 ```
 
-7. Open http://127.0.0.1:5000 in your browser.
+Open [http://127.0.0.1:5000](http://127.0.0.1:5000) in a browser.
 
-## Project Instructions
+## Run Tests
 
-Use GitHub Copilot to refactor the code for this game to add more advanced features. The goal is to create a more modern and maintainable codebase and add additional functionality to the final product. You can use any combination of code completion and chat features, like Ask, Edit, or Agent modes.
+From the `starter` directory, run the exact test command:
 
-- Errors should be handled gracefully with appropriate messages to the user.
-- Implement a Sudoku board generator that creates a valid Sudoku puzzle with a unique solution.
-- Add a timer to track how long it takes to solve the puzzle.
-- Implement a solution checker that verifies if the user's solution is correct using event delegation.
-- Add a difficulty selector to allow users to choose between easy, medium, and hard puzzles.
-- Add a hint feature that provides clues for the user that are noted with unique colors.
-- Add a check puzzle button that checks the current state of the board against the solution.
-- User should get immediate feedback on their input, such as highlighting invalid entries.
-- Top 10 scores should be saved in local storage and displayed on the page with the user's name, time taken, hints used, and difficulty level.
-- The game should be responsive and work well on both desktop and mobile devices.
-- UI colors should be visually appealing and accessible.
-- Completed and correct puzzles should display a congratulatory message with the time taken and hints used and ask for the user's name for Top 10 times.
+```powershell
+python -m pytest
+```
+
+The current test suite contains **24 passing tests** covering Sudoku
+generation, unique-solution behavior, difficulty handling, Flask routes, and
+solution checking.
+
+## How to Play
+
+1. Select Easy, Medium, or Hard.
+2. Enter numbers in the empty cells.
+3. Watch for immediate feedback on invalid moves.
+4. Use **Hint** to reveal a correct value when needed.
+5. Use **Check Solution** to check the current board.
+6. Complete the puzzle before the timer stops.
+7. Enter your name when prompted to save a qualifying result to the local
+   Top 10 leaderboard.
+8. Use **Dark mode** to switch themes; the preference persists between visits.
+
+## Technical Notes
+
+- Flask serves the game page and provides endpoints for generating puzzles and
+  checking submitted boards.
+- `sudoku_logic.py` creates a complete valid board, removes values, and uses
+  solution counting to guarantee uniqueness.
+- The frontend uses JavaScript for board interaction, validation, hints,
+  completion detection, timing, theme switching, and leaderboard rendering.
+- Leaderboard entries and dark-mode preferences are stored only in the
+  browser's `localStorage`; they are not shared between browsers or devices.
+
+## Project Structure
+
+```text
+starter/
+├── app.py
+├── sudoku_logic.py
+├── requirements.txt
+├── templates/
+│   └── index.html
+├── static/
+│   ├── main.js
+│   └── styles.css
+├── tests/
+│   ├── conftest.py
+│   ├── test_app.py
+│   └── test_sudoku_logic.py
+└── Screenshots/
+    └── Feature and milestone evidence images
+```
