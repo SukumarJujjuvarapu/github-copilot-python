@@ -91,7 +91,8 @@ function loadLeaderboard() {
 
     const entries = JSON.parse(stored);
     if (!Array.isArray(entries)) return [];
-
+    // Kept validation inline because the predicate is small enough to remain readable;
+   // extracting it would add another helper without meaningfully simplifying the flow.
     return entries
       .filter(entry =>
         entry &&
