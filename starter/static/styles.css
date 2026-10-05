@@ -3,6 +3,7 @@
     --text-color: #333;
     --board-background: #fff;
     --cell-background: #fafafa;
+    --box-alt-background: #f0f5f8;
     --cell-border: #bbb;
     --strong-border: #333;
     --focus-background: #e0f7fa;
@@ -28,6 +29,7 @@ body.dark-mode {
     --text-color: #f1f5f9;
     --board-background: #1e2936;
     --cell-background: #243140;
+    --box-alt-background: #2b3a4a;
     --cell-border: #64748b;
     --strong-border: #cbd5e1;
     --focus-background: #164e63;
@@ -84,6 +86,13 @@ h1 {
     background: var(--cell-background);
     color: var(--text-color);
     transition: background 0.2s;
+}
+
+.sudoku-row:nth-child(-n+3) .sudoku-cell:nth-child(n+4):nth-child(-n+6),
+.sudoku-row:nth-child(n+4):nth-child(-n+6) .sudoku-cell:nth-child(-n+3),
+.sudoku-row:nth-child(n+4):nth-child(-n+6) .sudoku-cell:nth-child(n+7):nth-child(-n+9),
+.sudoku-row:nth-child(n+7):nth-child(-n+9) .sudoku-cell:nth-child(n+4):nth-child(-n+6) {
+    background: var(--box-alt-background);
 }
 
 .sudoku-cell:focus {
