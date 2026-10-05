@@ -4,9 +4,28 @@ import random
 SIZE = 9
 EMPTY = 0
 MIN_UNIQUE_CLUES = 17
+MAX_GENERATION_ATTEMPTS = 100
+DIFFICULTY_CLUES = {
+    "Easy": 45,
+    "Medium": 35,
+    "Hard": 25,
+}
+_DEFAULT_CLUES = object()
+_DEFAULT_DIFFICULTY = object()
 
 def deep_copy(board):
     return copy.deepcopy(board)
+
+
+def clues_for_difficulty(difficulty):
+    try:
+        return DIFFICULTY_CLUES[difficulty]
+    except (KeyError, TypeError):
+        valid_levels = ", ".join(DIFFICULTY_CLUES)
+        raise ValueError(
+            f"invalid difficulty {difficulty!r}; choose one of: {valid_levels}"
+        ) from None
+
 
 def create_empty_board():
     return [[EMPTY for _ in range(SIZE)] for _ in range(SIZE)]
@@ -122,7 +141,14 @@ def remove_cells(board, clues):
     if removals != removals_needed:
         raise RuntimeError("unable to create a unique puzzle with this clue count")
 
-def generate_puzzle(clues=35):
+def generate_puzzle(clues=_DEFAULT_CLUES, *, difficulty=_DEFAULT_DIFFICULTY):
+    if difficulty is not _DEFAULT_DIFFICULTY:
+        if clues is not _DEFAULT_CLUES:
+            raise ValueError("clues and difficulty cannot be used together")
+        clues = clues_for_difficulty(difficulty)
+    elif clues is _DEFAULT_CLUES:
+        clues = DIFFICULTY_CLUES["Medium"]
+
     if isinstance(clues, bool) or not isinstance(clues, int):
         raise ValueError("clues must be an integer")
     if clues < MIN_UNIQUE_CLUES or clues > SIZE * SIZE:
@@ -130,9 +156,15 @@ def generate_puzzle(clues=35):
             f"clues must be between {MIN_UNIQUE_CLUES} and {SIZE * SIZE}"
         )
 
-    board = create_empty_board()
-    fill_board(board)
-    solution = deep_copy(board)
-    remove_cells(board, clues)
-    puzzle = deep_copy(board)
-    return puzzle, solution
+    for _ in range(MAX_GENERATION_ATTEMPTS):
+        board = create_empty_board()
+        fill_board(board)
+        solution = deep_copy(board)
+        try:
+            remove_cells(board, clues)
+        except RuntimeError:
+            continue
+        puzzle = deep_copy(board)
+        return puzzle, solution
+
+    raise RuntimeError("unable to create a unique puzzle with this clue count")

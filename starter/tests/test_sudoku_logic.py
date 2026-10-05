@@ -35,6 +35,45 @@ def test_generate_puzzle_preserves_solution_and_requested_clue_count():
     assert all(sorted(row) == list(range(1, 10)) for row in solution)
 
 
+@pytest.mark.parametrize(
+    ("difficulty", "expected_clues"),
+    [("Easy", 45), ("Medium", 35), ("Hard", 25)],
+)
+def test_generate_puzzle_supports_difficulty_levels(difficulty, expected_clues):
+    puzzle, solution = sudoku_logic.generate_puzzle(difficulty=difficulty)
+
+    assert sum(
+        cell != sudoku_logic.EMPTY for row in puzzle for cell in row
+    ) == expected_clues
+    assert sudoku_logic.count_solutions(puzzle) == 1
+    assert all(
+        puzzle[row][column] in (sudoku_logic.EMPTY, solution[row][column])
+        for row in range(sudoku_logic.SIZE)
+        for column in range(sudoku_logic.SIZE)
+    )
+
+
+def test_clues_for_difficulty_returns_centralized_clue_counts():
+    assert sudoku_logic.DIFFICULTY_CLUES == {
+        "Easy": 45,
+        "Medium": 35,
+        "Hard": 25,
+    }
+    for difficulty, clues in sudoku_logic.DIFFICULTY_CLUES.items():
+        assert sudoku_logic.clues_for_difficulty(difficulty) == clues
+
+
+def test_generate_puzzle_rejects_invalid_difficulty():
+    for difficulty in ("easy", "Extreme", "", None, 1):
+        with pytest.raises(ValueError, match="invalid difficulty"):
+            sudoku_logic.generate_puzzle(difficulty=difficulty)
+
+
+def test_generate_puzzle_rejects_clues_and_difficulty_together():
+    with pytest.raises(ValueError, match="cannot be used together"):
+        sudoku_logic.generate_puzzle(clues=35, difficulty="Medium")
+
+
 def test_count_solutions_returns_zero_for_an_invalid_board():
     board = sudoku_logic.create_empty_board()
     board[0][0] = 1
