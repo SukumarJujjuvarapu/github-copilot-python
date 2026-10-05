@@ -3,6 +3,52 @@ const SIZE = 9;
 let puzzle = [];
 let solution = [];
 let hintsUsed = 0;
+let timerInterval = null;
+let timerStartedAt = 0;
+let elapsedMilliseconds = 0;
+
+function formatElapsedTime(milliseconds) {
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function updateTimerDisplay() {
+  document.getElementById('timer').innerText =
+    `Time: ${formatElapsedTime(elapsedMilliseconds)}`;
+}
+
+function resetTimer() {
+  if (timerInterval !== null) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  timerStartedAt = 0;
+  elapsedMilliseconds = 0;
+  updateTimerDisplay();
+}
+
+function startTimer() {
+  resetTimer();
+  timerStartedAt = performance.now();
+  timerInterval = setInterval(() => {
+    elapsedMilliseconds = performance.now() - timerStartedAt;
+    updateTimerDisplay();
+  }, 250);
+}
+
+function stopTimer() {
+  if (timerStartedAt) {
+    elapsedMilliseconds = performance.now() - timerStartedAt;
+    updateTimerDisplay();
+  }
+  if (timerInterval !== null) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  timerStartedAt = 0;
+}
 
 function getCurrentBoard() {
   const inputs = document.getElementById('sudoku-board').getElementsByTagName('input');
@@ -57,6 +103,7 @@ function checkForCompletion() {
   for (const input of inputs) {
     input.disabled = true;
   }
+  stopTimer();
   const message = document.getElementById('message');
   message.style.color = '#388e3c';
   message.innerText = 'Congratulations! You solved it!';
@@ -145,6 +192,7 @@ function renderPuzzle(puz) {
 }
 
 async function newGame() {
+  resetTimer();
   solution = [];
   hintsUsed = 0;
   updateHintCount();
@@ -154,6 +202,7 @@ async function newGame() {
   renderPuzzle(data.puzzle);
   solution = data.puzzle.map(row => row.slice());
   solveBoard(solution);
+  startTimer();
   document.getElementById('message').innerText = '';
 }
 
@@ -211,6 +260,7 @@ async function checkSolution() {
     }
   }
   if (incorrect.size === 0) {
+    stopTimer();
     msg.style.color = '#388e3c';
     msg.innerText = 'Congratulations! You solved it!';
   } else {
